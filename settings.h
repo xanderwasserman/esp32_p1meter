@@ -1,73 +1,50 @@
-// **********************************
-// * Ledstrip Settings              *
-// **********************************
-
-// Update treshold in milliseconds, messages will only be sent on this interval
-#define UPDATE_INTERVAL 60000  // 1 minute
-//#define UPDATE_INTERVAL 300000 // 5 minutes
-
-// * Baud rate for both hardware and software 
-#define BAUD_RATE 115200
-
-// The used serial pins, note that this can only be UART0, as other ports dont support the required inversion
-#define SERIAL_RX RX
-#define SERIAL_TX TX
-
-// * Max telegram length
-#define P1_MAXLINELENGTH 1050
-
-// * The hostname of our little creature
 #define HOSTNAME "p1meter"
-
-// * The password used for OTA
 #define OTA_PASSWORD "admin"
 
-// * Wifi timeout in milliseconds
-#define WIFI_TIMEOUT 30000
+#define BAUD_RATE 115200
+#define P1_SERIAL_RX RX
+#define P1_MAXLINELENGTH 1050
 
-// * MQTT network settings
-#define MQTT_MAX_RECONNECT_TRIES 10
-
-// * MQTT root topic
+#define MQTT_MAX_RECONNECT_TRIES 100
 #define MQTT_ROOT_TOPIC "sensors/power/p1meter"
 
-// * MQTT Last reconnection counter
 long LAST_RECONNECT_ATTEMPT = 0;
 
-long LAST_UPDATE_SENT = 0;
+char WIFI_SSID[32] = "";
+char WIFI_PASS[32] = "";
 
-// * To be filled with EEPROM data
 char MQTT_HOST[64] = "";
 char MQTT_PORT[6]  = "";
 char MQTT_USER[32] = "";
 char MQTT_PASS[32] = "";
 
-// * Set to store received telegram
 char telegram[P1_MAXLINELENGTH];
 
-// * Set to store the data values read
-long CONSUMPTION_LOW_TARIF;
-long CONSUMPTION_HIGH_TARIF;
-long ACTUAL_CONSUMPTION;
-long ACTUAL_RETURNDELIVERY;
-long GAS_METER_M3;
+// If the CRC check is not working (see below), insert the last known value here 
+// for DQ checks initialization. The last three integers, are the three decimal 
+// places (e.g. 10.123 = 10123). For more info, see the README.md
+long CONSUMPTION_HIGH_TARIF = 0;
+long CONSUMPTION_HIGH_TARIF_PREV;
+long CONSUMPTION_LOW_TARIF = 0;
+long CONSUMPTION_LOW_TARIF_PREV;
+long DELIVERED_HIGH_TARIF = 0;
+long DELIVERED_HIGH_TARIF_PREV;
+long DELIVERED_LOW_TARIF = 0;
+long DELIVERED_LOW_TARIF_PREV;
+long GAS_METER_M3 = 0;
+long GAS_METER_M3_PREV;
 
-long L1_INSTANT_POWER_USAGE;
-long L2_INSTANT_POWER_USAGE;
-long L3_INSTANT_POWER_USAGE;
-long L1_INSTANT_POWER_CURRENT;
-long L2_INSTANT_POWER_CURRENT;
-long L3_INSTANT_POWER_CURRENT;
-long L1_VOLTAGE;
-long L2_VOLTAGE;
-long L3_VOLTAGE;
-
-// Set to store data counters read
 long ACTUAL_TARIF;
+long ACTUAL_CONSUMPTION;
+long INSTANT_POWER_CURRENT;
+long INSTANT_POWER_USAGE;
+
 long SHORT_POWER_OUTAGES;
 long LONG_POWER_OUTAGES;
 long SHORT_POWER_DROPS;
 long SHORT_POWER_PEAKS;
 
-// * Set during CRC checking
+// The CRC check didn't work for me: all data was supposedly corrupt and thus nothing was send
+// To solve the DQ issues without CRC, checks were implemented using _PREV variables
 unsigned int currentCRC = 0;
+bool useCRC = false;

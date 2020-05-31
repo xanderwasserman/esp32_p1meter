@@ -13,75 +13,39 @@
   value_template: "{{ value|float / 1000 }}"
 
 - platform: mqtt
-  name: P1 Actual Power Consumption
-  unit_of_measurement: 'kW'
-  state_topic: "sensors/power/p1meter/actual_consumption"
+  name: P1 Delivered Low Tarif
+  unit_of_measurement: 'kWh'
+  state_topic: "sensors/power/p1meter/delivered_low_tarif"
   value_template: "{{ value|float / 1000 }}"
 
 - platform: mqtt
-  name: P1 Actual Return Delivery
-  unit_of_measurement: 'kW'
-  state_topic: "sensors/power/p1meter/actual_returndelivery"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L1 Instant Power Usage
-  unit_of_measurement: 'kW'
-  state_topic: "sensors/power/p1meter/l1_instant_power_usage"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L2 Instant Power Usage
-  unit_of_measurement: 'kW'
-  state_topic: "sensors/power/p1meter/l2_instant_power_usage"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L3 Instant Power Usage
-  unit_of_measurement: 'kW'
-  state_topic: "sensors/power/p1meter/l3_instant_power_usage"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L1 Instant Power Current
-  unit_of_measurement: 'A'
-  state_topic: "sensors/power/p1meter/l1_instant_power_current"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L2 Instant Power Current
-  unit_of_measurement: 'A'
-  state_topic: "sensors/power/p1meter/l2_instant_power_current"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L3 Instant Power Current
-  unit_of_measurement: 'A'
-  state_topic: "sensors/power/p1meter/l3_instant_power_current"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L1 Voltage
-  unit_of_measurement: 'V'   
-  state_topic: "sensors/power/p1meter/l1_voltage"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L2 Voltage
-  unit_of_measurement: 'V'   
-  state_topic: "sensors/power/p1meter/l2_voltage"
-  value_template: "{{ value|float / 1000 }}"
-
-- platform: mqtt
-  name: P1 L3 Voltage
-  unit_of_measurement: 'V'   
-  state_topic: "sensors/power/p1meter/l3_voltage"
+  name: P1 Delivered High Tarif
+  unit_of_measurement: 'kWh'
+  state_topic: "sensors/power/p1meter/delivered_high_tarif"
   value_template: "{{ value|float / 1000 }}"
 
 - platform: mqtt
   name: P1 Gas Usage
   unit_of_measurement: 'm3'
   state_topic: "sensors/power/p1meter/gas_meter_m3"
+  value_template: "{{ value|float / 1000 }}"
+
+- platform: mqtt
+  name: P1 Actual Power Consumption
+  unit_of_measurement: 'kW'
+  state_topic: "sensors/power/p1meter/actual_consumption"
+  value_template: "{{ value|float / 1000 }}"
+
+- platform: mqtt
+  name: P1 Instant Power Usage
+  unit_of_measurement: 'kW'
+  state_topic: "sensors/power/p1meter/instant_power_usage"
+  value_template: "{{ value|float / 1000 }}"
+
+- platform: mqtt
+  name: P1 Instant Power Current
+  unit_of_measurement: 'A'
+  state_topic: "sensors/power/p1meter/instant_power_current"
   value_template: "{{ value|float / 1000 }}"
 
 - platform: mqtt
