@@ -45,6 +45,7 @@ void send_metric(String name, long metric)
 
 void send_data_to_broker()
 {
+  // If statement as "power-loss-reset fix" (see README.md)
   if (CONSUMPTION_HIGH_TARIF > 0) send_metric("consumption_high_tarif", CONSUMPTION_HIGH_TARIF);
   if (CONSUMPTION_LOW_TARIF > 0) send_metric("consumption_low_tarif", CONSUMPTION_LOW_TARIF);
   if (DELIVERED_HIGH_TARIF > 0) send_metric("delivered_high_tarif", DELIVERED_HIGH_TARIF);
