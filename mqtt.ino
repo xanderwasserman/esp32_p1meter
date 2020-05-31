@@ -45,11 +45,11 @@ void send_metric(String name, long metric)
 
 void send_data_to_broker()
 {
-  send_metric("consumption_low_tarif", CONSUMPTION_LOW_TARIF);
-  send_metric("consumption_high_tarif", CONSUMPTION_HIGH_TARIF);
-  send_metric("delivered_low_tarif", DELIVERED_LOW_TARIF);
-  send_metric("delivered_high_tarif", DELIVERED_HIGH_TARIF);
-  send_metric("gas_meter_m3", GAS_METER_M3);
+  if (CONSUMPTION_HIGH_TARIF > 0) send_metric("consumption_high_tarif", CONSUMPTION_HIGH_TARIF);
+  if (CONSUMPTION_LOW_TARIF > 0) send_metric("consumption_low_tarif", CONSUMPTION_LOW_TARIF);
+  if (DELIVERED_HIGH_TARIF > 0) send_metric("delivered_high_tarif", DELIVERED_HIGH_TARIF);
+  if (DELIVERED_LOW_TARIF > 0) send_metric("delivered_low_tarif", DELIVERED_LOW_TARIF);
+  if (GAS_METER_M3 > 0) send_metric("gas_meter_m3", GAS_METER_M3);
   
   send_metric("actual_consumption", ACTUAL_CONSUMPTION);
   send_metric("instant_power_usage", INSTANT_POWER_USAGE);
