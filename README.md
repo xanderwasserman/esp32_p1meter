@@ -1,32 +1,40 @@
 # esp8266_p1meter
 
-Software for the ESP2866 that sends P1 smart meter data to an mqtt broker (with OTA firmware updates)
+Software for the ESP2866 (Wemos D1 Mini/NodeMcu etc.) that sends P1 smart meter (DSMR) data to a MQTT broker, with the possibility for Over The Air (OTA) firmware updates.
 
-## about this fork
-This fork (tries) to add support for the `Landys and Gyr E360` smartmeter (ESMR5.0)
+## About this fork
+The original project of [fliphess](https://github.com/fliphess/esp8266_p1meter) has issues with DSMR 5.0 meters, which send telegrams every 1 second at a high 115200 baud rate. 
+This causes the used SoftwareSerial to struggle to keep up and thus only receives corrupted messages. 
 
-The ![original source](https://github.com/fliphess/esp8266_p1meter) has issues with ESMR5.0 meters who like to send telegrams every 1 second at a high 115200 baud rate. 
-This causes the used SoftwareSerial to struggle to keep up and thus only receives corrupted messages. This fork switches to using the main Hardware serial port (RX) for communication with the meter.
+The project of [daniel-jong](https://github.com/daniel-jong/esp8266_p1meter) switches to using the main hardware serial port (RX) for communication with the p1 meter and is tested on the `Landys and Gyr E360` smartmeter (DSMR 5.0).
+
+Then I noticed the project of [WhoSayIn](https://github.com/WhoSayIn/esp8266_dsmr2mqtt), that takes a much more minimalistic approach, which I liked. However, I discovered this project was also designed for the DSMR 4.0 meters.
+
+With this fork, I want to accomplish the following:
+- Combine the projects mentioned above in a minimalistic setup for the newer DSMR 5.0 smart meters (at the time of writing: 402 vs 681 lines of code, tested on the `ISKRA AM550`).
+- Separate code in multiple files for readability.
+- Add solar panel meter: read out delivered energy.
+- Add an alternative data quality (DQ) check for the CRC check.
+
+To add to the last point: I don't exactly know why, but the CRC check never worked for me. It always said that the data read out from the serial port was corrupted. When I turned this off, I noticed that most of the time the data is actually fine, but it sometimes drops back to zero or some lower value. This of course shouldn't be possible (you can't suddenly have used less energy than you did in the past), so  I built a check into the code to see whether the current value is higher than the previous value. If that's not the case, the last known (previous) value is send again.
 
 # Getting started
 This setup requires:
-- An Esp8266 (nodeMcu and Wemos d1 mini have been tested)
+- An esp8266 (Wemos D1 mini has been tested)
+- Small breadboard
 - A 10k ohm resistor
-- A 4 or [6 pin RJ11 cable](https://www.tinytronics.nl/shop/nl/kabels/adapters/rj12-naar-6-pins-dupont-jumper-adapter) A 4 pin cable works great, A 6 pin cable can also power the ESP8266 on most ESMR5+ meters.
+- A 4 pin (RJ11) or [6 pin (RJ12) cable](https://www.tinytronics.nl/shop/nl/kabels/adapters/rj12-naar-6-pins-dupont-jumper-adapter). Both cables work great, but a 6 pin cable can also power the ESP8266 on most DSMR5+ meters.
 
 Setting up your Arduino IDE:
-- Ensure you have selected the right board
-- Please note: I have only tested this on the 160mhz frequency mode, so select this in the tools menu for now.
-- Using the Tools->Manage Libraries... install `PubSubClient` and `WifiManager`
-- In the file `Settings.h` change `OTA_PASSWORD` to a safe secret value
-- Flash the software
+- Ensure you have selected the right board (you might need to install your esp8266board in the Arduino IDE).
+- Please note: I have only tested this on the 80 MHz CPU frequency mode. However, [daniel-jong](https://github.com/daniel-jong/esp8266_p1meter) has tested it on 160 MHz.
+- Using the Tools->Manage Libraries... install `PubSubClient`.
+- In the file `Settings.h` change all values accordingly
+- Write to your device via USB the first time, you can do it OTA all times thereafter.
 
-Finishing off:
-- You should now see a new wifi network `ESP******` connect to this wifi network, a popup should appear, else manually navigate to `192.168.4.1`
-- Configure your wifi and Mqtt settings
-- To check if everything is up and running you can listen to the MQTT topic `hass/status`, on startup a single message is sent.
+## Circuit diagram
+_Note: I have only tested this on the `ISKRA AM550`._
 
-## Connecting to the P1 meter
 Connect the ESP8266 to an RJ11 cable/connector following the diagram.
 
 | P1 pin   | ESP8266 Pin |
@@ -36,11 +44,11 @@ Connect the ESP8266 to an RJ11 cable/connector following the diagram.
 | 4 -      |      |
 | 5 - RXD (data) | RX (gpio3) |
 
-On most Landys and Gyr models a 10K resistor should be used between the ESP's 3.3v and the p1's DATA (RXD) pin. Many howto's mention RTS requires 5V (VIN) to activate the P1 port, but for me 3V3 suffices.
+On most models a 10K resistor should be used between the ESP's 3.3v and the p1's DATA (RXD) pin. Many howto's mention RTS requires 5V (VIN) to activate the P1 port, but for me 3V3 suffices.
 
 ![Wiring](https://raw.githubusercontent.com/daniel-jong/esp8266_p1meter/master/assets/esp8266_p1meter_bb.png)
 
-<details><summary>Optional: Powering the ESP8266 using your ESMR5+ meter</summary>
+<details><summary>Optional: Powering the ESP8266 using your DSMR5+ meter</summary>
 <p>
 When using a 6 pin cable you can use the power source provided by the meter.
   
@@ -64,39 +72,31 @@ All metrics are send to their own MQTT topic.
 The software sends out to the following MQTT topics:
 
 ```
-sensors/power/p1meter/consumption_low_tarif 2209397
-sensors/power/p1meter/consumption_high_tarif 1964962
-sensors/power/p1meter/actual_consumption 313
-sensors/power/p1meter/actual_returndelivery 0
-sensors/power/p1meter/l1_instant_power_usage 313
-sensors/power/p1meter/l2_instant_power_usage 0
-sensors/power/p1meter/l3_instant_power_usage 0
-sensors/power/p1meter/l1_instant_power_current 1000
-sensors/power/p1meter/l2_instant_power_current 0
-sensors/power/p1meter/l3_instant_power_current 0
-sensors/power/p1meter/l1_voltage 233
-sensors/power/p1meter/l2_voltage 0
-sensors/power/p1meter/l3_voltage 0
-sensors/power/p1meter/gas_meter_m3 968922
-sensors/power/p1meter/actual_tarif_group 2
-sensors/power/p1meter/short_power_outages 3
-sensors/power/p1meter/long_power_outages 1
-sensors/power/p1meter/short_power_drops 0
-sensors/power/p1meter/short_power_peaks 0
+sensors/power/p1meter/consumption_low_tarif
+sensors/power/p1meter/consumption_high_tarif
+sensors/power/p1meter/delivered_low_tarif
+sensors/power/p1meter/delivered_high_tarif
+sensors/power/p1meter/gas_meter_m3
+sensors/power/p1meter/actual_consumption
+sensors/power/p1meter/instant_power_usage
+sensors/power/p1meter/instant_power_current
+sensors/power/p1meter/actual_tarif_group
+sensors/power/p1meter/short_power_outages
+sensors/power/p1meter/long_power_outages
+sensors/power/p1meter/short_power_drops
+sensors/power/p1meter/short_power_peaks
 ```
 
 ## Home Assistant Configuration
 
 Use this [example](https://raw.githubusercontent.com/daniel-jong/esp8266_p1meter/master/assets/p1_sensors.yaml) for home assistant's `sensor.yaml`
 
-The automatons are yours to create.
-And always remember that sending alerts in case of a power outtage only make sense when you own a UPS battery :)
+## Known limitations and issues
+- In case you power a Wemos D1 mini by the an `ISKRA AM550` (= DSMR 5.0 meter), every so often the device might loose the connection to the MQTT server for a couple of seconds. I believe the device also resets itself, so this probably means a temporary power loss (possibly the meter stops providing current for a second or something). If this happens and you are using the custom DQ checks I built, the last know/previous value is of course zero, and you can still encounter drops to zero/lower values. To reduce the (absolute) size of these drops, it is suggested to fill in the last known value before uploading the firmware (see `settings.h`). In the future I'll possibly look into writing the `_PREV` values to EEPROM one or multiple times a day. I won't do this each serial read, due to life time reduction of the device with each EEPROM write. I you want to help with this, feel free to branch, code and send me a PR.   
 
 ## Thanks to
 
-This sketch is mostly copied and pasted from several other projects.
-Standing on the heads of giants, big thanks and great respect to the writers and/or creators of:
-
+As [fliphess](https://github.com/fliphess/esp8266_p1meter) thanked a few people, I want to list them here as well:
 - https://github.com/jantenhove/P1-Meter-ESP8266
 - https://github.com/neographikal/P1-Meter-ESP8266-MQTT
 - http://gejanssen.com/howto/Slimme-meter-uitlezen/
@@ -104,3 +104,10 @@ Standing on the heads of giants, big thanks and great respect to the writers and
 - http://romix.macuser.nl/software.html
 - http://blog.regout.info/category/slimmeter/
 - http://domoticx.com/p1-poort-slimme-meter-hardware/
+
+In addition, I'd like thank and refer to the following projects which served as a source of information:
+- [https://github.com/daniel-jong/esp8266_p1meter](https://github.com/daniel-jong/esp8266_p1meter)
+- [https://github.com/WhoSayIn/esp8266_dsmr2mqtt](https://github.com/WhoSayIn/esp8266_dsmr2mqtt)
+
+Other sources:
+- [DSMR 5.0 documentation](https://www.netbeheernederland.nl/_upload/Files/Slimme_meter_15_a727fce1f1.pdf)
