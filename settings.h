@@ -20,9 +20,9 @@ char MQTT_PASS[32] = "";
 
 char telegram[P1_MAXLINELENGTH];
 
-// If the CRC check is not working (see below), insert the last known value here 
-// for DQ checks initialization. The last three integers, are the three decimal 
-// places (e.g. 10.123 = 10123). For more info, see the README.md
+// The last three integers, are the three decimal places (e.g. 10.123 = 10123)
+// If you are not using the CRC, but the custom built DQ check, leave start values at zero
+// For more info, see README.md
 long CONSUMPTION_HIGH_TARIF = 0;
 long CONSUMPTION_HIGH_TARIF_PREV;
 long CONSUMPTION_LOW_TARIF = 0;

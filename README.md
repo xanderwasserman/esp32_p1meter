@@ -14,11 +14,11 @@ With this fork, I want to accomplish the following:
 - Combine the projects mentioned above in a minimalistic setup for the newer DSMR 5.0 smart meters (at the time of writing: 402 vs 681 lines of code, tested on the `ISKRA AM550`).
 - Separate code in multiple files for readability.
 - Add solar panel meter: read out delivered energy.
-- Add an alternative data quality (DQ) check for the CRC check.
+- Add an alternative data quality (DQ) check for the CRC check. See the `getValueWithDqCheck` method.
 
-To add to the last point: I don't exactly know why, but the CRC check never worked for me. It always said that the data read out from the serial port was corrupted. When I turned this off, I noticed that most of the time the data is actually fine, but it sometimes drops back to zero or some lower value. This of course shouldn't be possible (you can't suddenly have used less energy than you did in the past), so  I built a check into the code to see whether the current value is higher than the previous value. If that's not the case, the last known (previous) value is send again.
+To add to the last point: I don't exactly know why, but the CRC check never worked for me. It always said that the data read out from the serial port was corrupted. When I turned this off, I noticed that most of the time the data is actually fine, but it sometimes drops back to zero or some lower value. This of course shouldn't be possible (you can't suddenly have used less energy than you did in the past), so I built a check into the code to see whether the current value is higher than the previous value. If that's not the case, the last known (previous) value is send again.
 
-# Getting started
+## Setup
 This setup requires:
 - An esp8266 (Wemos D1 mini has been tested)
 - Small breadboard
@@ -27,12 +27,12 @@ This setup requires:
 
 Setting up your Arduino IDE:
 - Ensure you have selected the right board (you might need to install your esp8266board in the Arduino IDE).
-- Please note: I have only tested this on the 80 MHz CPU frequency mode. However, [daniel-jong](https://github.com/daniel-jong/esp8266_p1meter) has tested it on 160 MHz.
+- I have tested this on the 80 MHz and 160 MHz CPU frequency mode, pick either one.
 - Using the Tools->Manage Libraries... install `PubSubClient`.
 - In the file `Settings.h` change all values accordingly
 - Write to your device via USB the first time, you can do it OTA all times thereafter.
 
-## Circuit diagram
+### Circuit diagram
 _Note: I have only tested this on the `ISKRA AM550`._
 
 Connect the ESP8266 to an RJ11 cable/connector following the diagram.
@@ -66,7 +66,7 @@ When using a 6 pin cable you can use the power source provided by the meter.
 </p>
 </details>
 
-## Data Sent
+### Data Sent
 
 All metrics are send to their own MQTT topic.
 The software sends out to the following MQTT topics:
@@ -87,12 +87,12 @@ sensors/power/p1meter/short_power_drops
 sensors/power/p1meter/short_power_peaks
 ```
 
-## Home Assistant Configuration
+### Home Assistant Configuration
 
 Use this [example](https://raw.githubusercontent.com/daniel-jong/esp8266_p1meter/master/assets/p1_sensors.yaml) for home assistant's `sensor.yaml`
 
 ## Known limitations and issues
-- In case you power a Wemos D1 mini by the an `ISKRA AM550` (= DSMR 5.0 meter), every so often the device might loose the connection to the MQTT server for a couple of seconds. I believe the device also resets itself, so this probably means a temporary power loss (possibly the meter stops providing current for a second or something). If this happens and you are using the custom DQ checks I built, the last know/previous value is of course zero, and you can still encounter drops to zero/lower values. To reduce the (absolute) size of these drops, it is suggested to fill in the last known value before uploading the firmware (see `settings.h`). In the future I'll possibly look into writing the `_PREV` values to EEPROM one or multiple times a day. I won't do this each serial read, due to life time reduction of the device with each EEPROM write. I you want to help with this, feel free to branch, code and send me a PR.   
+In case you power a Wemos D1 mini by the `ISKRA AM550` (and possibly other DSMR 5.0 meters), every so often the device might loose the connection to the MQTT server for a couple of seconds. I believe the device also resets itself, so this probably means that a temporary power loss is causing the loose connection (maybe the meter stops providing current for a second or something). If this happens and you are using the custom DQ checks I built (`getValueWithDqCheck` method), the last know/previous value is of course zero, and you can thus still encounter drops to zero, even with the custom DQ fix. Therefore I implemented a "power-loss-reset fix", by adding an if statement before sending data to the MQTT broker. Assuming you initialize all the values with zero, the if statement checks if the value being send is larger than zero.
 
 ## Thanks to
 
