@@ -1,8 +1,10 @@
 # esp8266_p1meter
 
-Software for the ESP2866 (Wemos D1 Mini/NodeMcu etc.) that sends P1 smart meter (DSMR) data to a MQTT broker, with the possibility for Over The Air (OTA) firmware updates.
+Software for the ESP32 (DoIT ESP DEVKIT v1/NodeMcu 32s etc.) that sends P1 smart meter (DSMR) data to a MQTT broker, with the possibility for Over The Air (OTA) firmware updates.
 
 ## About this fork
+This fork was based on a ESP8266 and I only had a ESP32 laying around so I'm trying to make this work on my ESP32 DoIT board.
+
 The original project of [fliphess](https://github.com/fliphess/esp8266_p1meter) has issues with DSMR 5.0 meters, which send telegrams every 1 second at a high 115200 baud rate. 
 This causes the used SoftwareSerial to struggle to keep up and thus only receives corrupted messages. 
 
@@ -20,13 +22,13 @@ To add to the last point: I don't exactly know why, but the CRC check never work
 
 ## Setup
 This setup requires:
-- An esp8266 (Wemos D1 mini has been tested)
+- An ESP32 (DoIT DEVKIT v1 has been tested)
 - Small breadboard
 - A 10k ohm resistor
 - A 4 pin (RJ11) or [6 pin (RJ12) cable](https://www.tinytronics.nl/shop/nl/kabels/adapters/rj12-naar-6-pins-dupont-jumper-adapter). Both cables work great, but a 6 pin cable can also power the ESP8266 on most DSMR5+ meters.
 
 Setting up your Arduino IDE:
-- Ensure you have selected the right board (you might need to install your esp8266board in the Arduino IDE).
+- Ensure you have selected the right board (you might need to install your esp32board in the Arduino IDE).
 - I have tested this on the 80 MHz and 160 MHz CPU frequency mode, pick either one.
 - Using the Tools->Manage Libraries... install `PubSubClient`.
 - In the file `Settings.h` change all values accordingly
@@ -35,7 +37,7 @@ Setting up your Arduino IDE:
 ### Circuit diagram
 _Note: I have only tested this on the `ISKRA AM550`._
 
-Connect the ESP8266 to an RJ11 cable/connector following the diagram.
+Connect the ESP32 to an RJ11 cable/connector following the diagram.
 
 | P1 pin   | ESP8266 Pin |
 | ----     | ---- |
