@@ -1,3 +1,6 @@
+# Under development
+Just started the development do not use.
+
 # esp32_p1meter
 
 Software for the ESP32 (DoIT ESP DEVKIT v1/NodeMcu 32s etc.) that sends P1 smart meter (DSMR) data to a MQTT broker, with the possibility for Over The Air (OTA) firmware updates.
