@@ -1,50 +1,45 @@
+#define DEBUG
+// Update treshold in milliseconds, messages will only be sent on this interval
+#define UPDATE_INTERVAL 10000 // 10 seconds
+//#define UPDATE_INTERVAL 60000  // 1 minute
+//#define UPDATE_INTERVAL 300000 // 5 minutes
+
 #define HOSTNAME "p1meter"
 #define OTA_PASSWORD "admin"
 
 #define BAUD_RATE 115200
+#define RXD2 16
+#define TXD2 17
 #define P1_SERIAL_RX RX
 #define P1_MAXLINELENGTH 1050
 
 #define MQTT_MAX_RECONNECT_TRIES 100
 #define MQTT_ROOT_TOPIC "sensors/power/p1meter"
 
+#define NUMBER_OF_READOUTS 17
+
 long LAST_RECONNECT_ATTEMPT = 0;
+long LAST_UPDATE_SENT = 0;
 
 char WIFI_SSID[32] = "";
 char WIFI_PASS[32] = "";
 
 char MQTT_HOST[64] = "";
-char MQTT_PORT[6]  = "";
+char MQTT_PORT[6] = "";
 char MQTT_USER[32] = "";
 char MQTT_PASS[32] = "";
 
 char telegram[P1_MAXLINELENGTH];
 
-// The last three integers, are the three decimal places (e.g. 10.123 = 10123)
-// If you are not using the CRC, but the custom built DQ check, leave start values at zero
-// For more info, see README.md
-long CONSUMPTION_HIGH_TARIF = 0;
-long CONSUMPTION_HIGH_TARIF_PREV;
-long CONSUMPTION_LOW_TARIF = 0;
-long CONSUMPTION_LOW_TARIF_PREV;
-long DELIVERED_HIGH_TARIF = 0;
-long DELIVERED_HIGH_TARIF_PREV;
-long DELIVERED_LOW_TARIF = 0;
-long DELIVERED_LOW_TARIF_PREV;
-long GAS_METER_M3 = 0;
-long GAS_METER_M3_PREV;
+struct TelegramDecodedObject
+{
+  String name;
+  long value;
+  char code[16];
+  char startChar = '(';
+  char endChar = ')';
+};
 
-long ACTUAL_TARIF;
-long ACTUAL_CONSUMPTION;
-long INSTANT_POWER_CURRENT;
-long INSTANT_POWER_USAGE;
+struct TelegramDecodedObject telegramObjects[NUMBER_OF_READOUTS];
 
-long SHORT_POWER_OUTAGES;
-long LONG_POWER_OUTAGES;
-long SHORT_POWER_DROPS;
-long SHORT_POWER_PEAKS;
-
-// The CRC check didn't work for me: all data was supposedly corrupt and thus nothing was send
-// To solve the DQ issues without CRC, checks were implemented using _PREV variables
 unsigned int currentCRC = 0;
-bool useCRC = false;
