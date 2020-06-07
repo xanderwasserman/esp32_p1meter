@@ -36,34 +36,30 @@ Setting up your Arduino IDE:
 
 ### Circuit diagram
 _Note: I have only tested this on the `ISKRA AM550`._
-
+I have used the RX02 pin on the ESP32 so u can still use the USB port for debugging you ESP32.
 Connect the ESP32 to an RJ11 cable/connector following the diagram.
 
-| P1 pin   | ESP8266 Pin |
+| P1 pin   | ESP32 Pin |
 | ----     | ---- |
 | 2 - RTS  | 3.3v |
 | 3 - GND  | GND  |
 | 4 -      |      |
-| 5 - RXD (data) | RX (gpio3) |
+| 5 - RXD (data) | RX02 (gpio16) |
 
 On most models a 10K resistor should be used between the ESP's 3.3v and the p1's DATA (RXD) pin. Many howto's mention RTS requires 5V (VIN) to activate the P1 port, but for me 3V3 suffices.
-
-![Wiring](https://raw.githubusercontent.com/daniel-jong/esp8266_p1meter/master/assets/esp8266_p1meter_bb.png)
 
 <details><summary>Optional: Powering the ESP8266 using your DSMR5+ meter</summary>
 <p>
 When using a 6 pin cable you can use the power source provided by the meter.
   
-| P1 pin   | ESP8266 Pin |
+| P1 pin   | ESP32 Pin |
 | ----     | ---- |
 | 1 - 5v out | 5v or Vin |
 | 2 - RTS  | 3.3v |
 | 3 - GND  | GND  |
 | 4 -      |      |
-| 5 - RXD (data) | RX (gpio3) |
+| 5 - RXD (data) | RX02 (gpio16) |
 | 6 - GND  | GND  |
-  
-![Wiring powered by meter](https://raw.githubusercontent.com/daniel-jong/esp8266_p1meter/master/assets/esp8266_p1meter_bb_PoweredByMeter.png)
 
 </p>
 </details>
@@ -76,18 +72,24 @@ The software sends out to the following MQTT topics:
 ```
 sensors/power/p1meter/consumption_low_tarif
 sensors/power/p1meter/consumption_high_tarif
-sensors/power/p1meter/delivered_low_tarif
-sensors/power/p1meter/delivered_high_tarif
-sensors/power/p1meter/gas_meter_m3
-sensors/power/p1meter/actual_consumption
-sensors/power/p1meter/instant_power_usage
-sensors/power/p1meter/instant_power_current
+sensors/power/p1meter/actual_received
+sensors/power/p1meter/instant_power_usage_l1
+sensors/power/p1meter/instant_power_usage_l2
+sensors/power/p1meter/instant_power_usage_l3
+sensors/power/p1meter/instant_power_current_l1
+sensors/power/p1meter/instant_power_current_l2
+sensors/power/p1meter/instant_power_current_l3
+sensors/power/p1meter/instant_voltage_l1
+sensors/power/p1meter/instant_voltage_l2
+sensors/power/p1meter/instant_voltage_l3
 sensors/power/p1meter/actual_tarif_group
 sensors/power/p1meter/short_power_outages
 sensors/power/p1meter/long_power_outages
 sensors/power/p1meter/short_power_drops
 sensors/power/p1meter/short_power_peaks
 ```
+
+But all the metrics you need are easily added using the `setupDataReadout()` method. With the DEBUG mode it is easy to see all the topics you add/create by the serial monitor. To see what your telegram is outputting in the Netherlands see: https://www.netbeheernederland.nl/_upload/Files/Slimme_meter_15_a727fce1f1.pdf for the dutch codes pag. 19 -23
 
 ### Home Assistant Configuration
 
