@@ -112,6 +112,7 @@ As [fliphess](https://github.com/fliphess/esp8266_p1meter) thanked a few people,
 In addition, I'd like thank and refer to the following projects which served as a source of information:
 - [https://github.com/daniel-jong/esp8266_p1meter](https://github.com/daniel-jong/esp8266_p1meter)
 - [https://github.com/WhoSayIn/esp8266_dsmr2mqtt](https://github.com/WhoSayIn/esp8266_dsmr2mqtt)
+- [https://github.com/jhockx/esp8266_p1meter](https://github.com/jhockx/esp8266_p1meter)
 
 Other sources:
 - [DSMR 5.0 documentation](https://www.netbeheernederland.nl/_upload/Files/Slimme_meter_15_a727fce1f1.pdf)
