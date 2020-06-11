@@ -16,7 +16,7 @@
 #define MQTT_MAX_RECONNECT_TRIES 100
 #define MQTT_ROOT_TOPIC "sensors/power/p1meter"
 
-#define NUMBER_OF_READOUTS 17
+#define NUMBER_OF_READOUTS 19
 
 long LAST_RECONNECT_ATTEMPT = 0;
 long LAST_UPDATE_SENT = 0;

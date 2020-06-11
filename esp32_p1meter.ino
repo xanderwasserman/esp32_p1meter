@@ -20,7 +20,7 @@ void setup()
 
 #ifdef DEBUG
     Serial.println("Booting - DEBUG mode on");
-    blinkLed(2, 1000);
+    blinkLed(2, 500);
     delay(500);
     blinkLed(2, 2000);
     // Blinking 2 times fast and two times slower to indicate DEBUG mode
@@ -126,89 +126,95 @@ void setupDataReadout()
     telegramObjects[2].name = "actual_consumption";
     strcpy(telegramObjects[2].code, "1-0:1.7.0");
     telegramObjects[2].endChar = '*';
+
     // 1-0:2.7.0(00.000*kW) Actuele teruglevering (-P) in 1 Watt resolution
-    telegramObjects[2].name = "actual_received";
-    strcpy(telegramObjects[2].code, "1-0:2.7");
-    telegramObjects[2].endChar = '*';
+    telegramObjects[3].name = "actual_received";
+    strcpy(telegramObjects[3].code, "1-0:2.7");
+    telegramObjects[3].endChar = '*';
 
     // 1-0:21.7.0(00.378*kW)
     // 1-0:21.7.0 = Instantaan vermogen Elektriciteit levering L1
-    telegramObjects[3].name = "instant_power_usage_l1";
-    strcpy(telegramObjects[3].code, "1-0:21.7.0");
-    telegramObjects[3].endChar = '*';
+    telegramObjects[4].name = "instant_power_usage_l1";
+    strcpy(telegramObjects[4].code, "1-0:21.7.0");
+    telegramObjects[4].endChar = '*';
 
     // 1-0:41.7.0(00.378*kW)
     // 1-0:41.7.0 = Instantaan vermogen Elektriciteit levering L2
-    telegramObjects[4].name = "instant_power_usage_l2";
-    strcpy(telegramObjects[4].code, "1-0:41.7.0");
-    telegramObjects[4].endChar = '*';
+    telegramObjects[5].name = "instant_power_usage_l2";
+    strcpy(telegramObjects[5].code, "1-0:41.7.0");
+    telegramObjects[5].endChar = '*';
 
     // 1-0:61.7.0(00.378*kW)
     // 1-0:61.7.0 = Instantaan vermogen Elektriciteit levering L3
-    telegramObjects[5].name = "instant_power_usage_l3";
-    strcpy(telegramObjects[5].code, "1-0:61.7.0");
-    telegramObjects[5].endChar = '*';
+    telegramObjects[6].name = "instant_power_usage_l3";
+    strcpy(telegramObjects[6].code, "1-0:61.7.0");
+    telegramObjects[6].endChar = '*';
 
     // 1-0:31.7.0(002*A)
     // 1-0:31.7.0 = Instantane stroom Elektriciteit L1
-    telegramObjects[6].name = "instant_power_current_l1";
-    strcpy(telegramObjects[6].code, "1-0:31.7.0");
-    telegramObjects[6].endChar = '*';
+    telegramObjects[7].name = "instant_power_current_l1";
+    strcpy(telegramObjects[7].code, "1-0:31.7.0");
+    telegramObjects[7].endChar = '*';
 
     // 1-0:51.7.0(002*A)
     // 1-0:51.7.0 = Instantane stroom Elektriciteit L2
-    telegramObjects[7].name = "instant_power_current_l2";
-    strcpy(telegramObjects[7].code, "1-0:51.7.0");
-    telegramObjects[7].endChar = '*';
+    telegramObjects[8].name = "instant_power_current_l2";
+    strcpy(telegramObjects[8].code, "1-0:51.7.0");
+    telegramObjects[8].endChar = '*';
 
     // 1-0:71.7.0(002*A)
     // 1-0:71.7.0 = Instantane stroom Elektriciteit L3
-    telegramObjects[8].name = "instant_power_current_l3";
-    strcpy(telegramObjects[8].code, "1-0:71.7.0");
-    telegramObjects[8].endChar = '*';
+    telegramObjects[9].name = "instant_power_current_l3";
+    strcpy(telegramObjects[9].code, "1-0:71.7.0");
+    telegramObjects[9].endChar = '*';
 
     // 1-0:32.7.0(232.0*V)
     // 1-0:32.7.0 = Voltage L1
-    telegramObjects[9].name = "instant_voltage_l1";
-    strcpy(telegramObjects[9].code, "1-0:32.7.0");
-    telegramObjects[9].endChar = '*';
+    telegramObjects[10].name = "instant_voltage_l1";
+    strcpy(telegramObjects[10].code, "1-0:32.7.0");
+    telegramObjects[10].endChar = '*';
 
     // 1-0:52.7.0(232.0*V)
     // 1-0:52.7.0 = Voltage L2
-    telegramObjects[10].name = "instant_voltage_l2";
-    strcpy(telegramObjects[10].code, "1-0:52.7.0");
-    telegramObjects[10].endChar = '*';
+    telegramObjects[11].name = "instant_voltage_l2";
+    strcpy(telegramObjects[11].code, "1-0:52.7.0");
+    telegramObjects[11].endChar = '*';
 
     // 1-0:72.7.0(232.0*V)
     // 1-0:72.7.0 = Voltage L3
-    telegramObjects[11].name = "instant_voltage_l3";
-    strcpy(telegramObjects[11].code, "1-0:72.7.0");
-    telegramObjects[11].endChar = '*';
+    telegramObjects[12].name = "instant_voltage_l3";
+    strcpy(telegramObjects[12].code, "1-0:72.7.0");
+    telegramObjects[12].endChar = '*';
 
     // 0-0:96.14.0(0001)
     // 0-0:96.14.0 = Actual Tarif
-    telegramObjects[12].name = "actual_tarif_group";
-    strcpy(telegramObjects[12].code, "0-0:96.14.0");
+    telegramObjects[13].name = "actual_tarif_group";
+    strcpy(telegramObjects[13].code, "0-0:96.14.0");
 
     // 0-0:96.7.21(00003)
     // 0-0:96.7.21 = Aantal onderbrekingen Elektriciteit
-    telegramObjects[13].name = "short_power_outages";
-    strcpy(telegramObjects[13].code, "0-0:96.7.21");
+    telegramObjects[14].name = "short_power_outages";
+    strcpy(telegramObjects[14].code, "0-0:96.7.21");
 
     // 0-0:96.7.9(00001)
     // 0-0:96.7.9 = Aantal lange onderbrekingen Elektriciteit
-    telegramObjects[14].name = "long_power_outages";
-    strcpy(telegramObjects[14].code, "0-0:96.7.9");
+    telegramObjects[15].name = "long_power_outages";
+    strcpy(telegramObjects[15].code, "0-0:96.7.9");
 
     // 1-0:32.32.0(00000)
     // 1-0:32.32.0 = Aantal korte spanningsdalingen Elektriciteit in fase 1
-    telegramObjects[15].name = "short_power_drops";
-    strcpy(telegramObjects[15].code, "1-0:32.32.0");
+    telegramObjects[16].name = "short_power_drops";
+    strcpy(telegramObjects[16].code, "1-0:32.32.0");
 
     // 1-0:32.36.0(00000)
     // 1-0:32.36.0 = Aantal korte spanningsstijgingen Elektriciteit in fase 1
-    telegramObjects[16].name = "short_power_peaks";
-    strcpy(telegramObjects[16].code, "1-0:32.36.0");
+    telegramObjects[17].name = "short_power_peaks";
+    strcpy(telegramObjects[17].code, "1-0:32.36.0");
+
+    // 0-1:24.2.1(150531200000S)(00811.923*m3)
+    // 0-1:24.2.1 = Gas (DSMR v4.0) on Kaifa MA105 meter
+    telegramObjects[18].name = "gas_meter_m3";
+    strcpy(telegramObjects[18].code, "0-1:24.2.1");
 
 #ifdef DEBUG
     Serial.println("MQTT Topics initialized:");
