@@ -1,6 +1,5 @@
 # esp32_p1meter
-
-Software for the ESP32 (DoIT ESP DEVKIT v1/NodeMcu 32s etc.) that sends P1 smart meter (DSMR) data to a MQTT broker, with the possibility for Over The Air (OTA) firmware updates.
+Software for the ESP32 (DoIT ESP DEVKIT v1/NodeMcu 32s etc.) that decodes and sends P1 smart meter (DSMR) data to a MQTT broker, with the possibility for Over The Air (OTA) firmware updates.
 
 ## About this fork
 This fork was based on a ESP8266 and I only had a ESP32 laying around so I'm trying to make this work on my ESP32 DoIT board.
@@ -13,12 +12,14 @@ The project of [daniel-jong](https://github.com/daniel-jong/esp8266_p1meter) swi
 Then I noticed the project of [WhoSayIn](https://github.com/WhoSayIn/esp8266_dsmr2mqtt), that takes a much more minimalistic approach, which I liked. However, I discovered this project was also designed for the DSMR 4.0 meters.
 
 With this fork, I want to accomplish the following:
-- Combine the projects mentioned above in a minimalistic setup for the newer DSMR 5.0 smart meters (at the time of writing: 402 vs 681 lines of code, tested on the `ISKRA AM550`).
+- Combine the projects mentioned above in a minimalistic setup for the newer DSMR 5.0 smart meters.
 - Separate code in multiple files for readability.
 - Add solar panel meter: read out delivered energy.
-- Add an alternative data quality (DQ) check for the CRC check. See the `getValueWithDqCheck` method.
+- Easy to read and add new readouts from a telegram. Used a struct to accomplish this.
+- Generate the full MQTT topics based on the array of telegram decode structs.
+- Easy to debug the software and able to compile without the debug for a more compact compiled code base. 
 
-To add to the last point: I don't exactly know why, but the CRC check never worked for me. It always said that the data read out from the serial port was corrupted. When I turned this off, I noticed that most of the time the data is actually fine, but it sometimes drops back to zero or some lower value. This of course shouldn't be possible (you can't suddenly have used less energy than you did in the past), so I built a check into the code to see whether the current value is higher than the previous value. If that's not the case, the last known (previous) value is send again.
+I noticed that the other repositories use SoftwareSerial library to readout the P1 port but the ESP32 has multiple RX and TX port to read en write serial streams. This made it easy to debug the code and have the full speed of the hardware serial. Also the ESP32 is a bit faster so it doesn't crash as fast as a ESP8266 when you want to readout every second.
 
 ## Setup
 This setup requires:
@@ -67,7 +68,8 @@ When using a 6 pin cable you can use the power source provided by the meter.
 ### Data Sent
 
 All metrics are send to their own MQTT topic.
-The software sends out to the following MQTT topics:
+The software generates all the topic through the Serial monitor when starting up
+Example topics are:
 
 ```
 sensors/power/p1meter/consumption_low_tarif
@@ -96,11 +98,13 @@ But all the metrics you need are easily added using the `setupDataReadout()` met
 Use this [example](https://raw.githubusercontent.com/daniel-jong/esp8266_p1meter/master/assets/p1_sensors.yaml) for home assistant's `sensor.yaml`
 
 ## Known limitations and issues
-In case you power a Wemos D1 mini by the `ISKRA AM550` (and possibly other DSMR 5.0 meters), every so often the device might loose the connection to the MQTT server for a couple of seconds. I believe the device also resets itself, so this probably means that a temporary power loss is causing the loose connection (maybe the meter stops providing current for a second or something). If this happens and you are using the custom DQ checks I built (`getValueWithDqCheck` method), the last know/previous value is of course zero, and you can thus still encounter drops to zero, even with the custom DQ fix. Therefore I implemented a "power-loss-reset fix", by adding an if statement before sending data to the MQTT broker. Assuming you initialize all the values with zero, the if statement checks if the value being send is larger than zero.
+No known limitations and issues so far.
 
 ## Thanks to
+I want to Thank [JHockx](https://github.com/jhockx/esp8266_p1meter) because he told me he was working on a project reading out his P1 Meter. It sounded like a fun project but I had somewhat different hardware laying around so I started working with that. 
 
-As [fliphess](https://github.com/fliphess/esp8266_p1meter) thanked a few people, I want to list them here as well:
+I also want to thank all the people he mentions in his project: 
+- https://github.com/fliphess/esp8266_p1meter
 - https://github.com/jantenhove/P1-Meter-ESP8266
 - https://github.com/neographikal/P1-Meter-ESP8266-MQTT
 - http://gejanssen.com/howto/Slimme-meter-uitlezen/
