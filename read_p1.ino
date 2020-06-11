@@ -1,4 +1,4 @@
-unsigned int CRC16(unsigned int crc, unsigned char *buf, int len)
+unsigned int crc16(unsigned int crc, unsigned char *buf, int len)
 {
     for (int pos = 0; pos < len; pos++)
     {
@@ -79,21 +79,23 @@ bool decodeTelegram(int len)
     int endChar = findCharInArrayRev(telegram, '!', len);
     bool validCRCFound = false;
 
+#ifdef DEBUG
     for (int cnt = 0; cnt < len; cnt++)
     {
         Serial.print(telegram[cnt]);
     }
     Serial.print("\n");
+#endif
 
     if (startChar >= 0)
     {
         // * Start found. Reset CRC calculation
-        currentCRC = CRC16(0x0000, (unsigned char *)telegram + startChar, len - startChar);
+        currentCRC = crc16(0x0000, (unsigned char *)telegram + startChar, len - startChar);
     }
     else if (endChar >= 0)
     {
         // * Add to crc calc
-        currentCRC = CRC16(currentCRC, (unsigned char *)telegram + endChar, 1);
+        currentCRC = crc16(currentCRC, (unsigned char *)telegram + endChar, 1);
 
         char messageCRC[5];
         strncpy(messageCRC, telegram + endChar + 1, 4);
@@ -111,7 +113,7 @@ bool decodeTelegram(int len)
     }
     else
     {
-        currentCRC = CRC16(currentCRC, (unsigned char *)telegram, len);
+        currentCRC = crc16(currentCRC, (unsigned char *)telegram, len);
     }
 
     // Loops throug all the telegramObjects to find the code in the telegram line
