@@ -98,7 +98,7 @@ But all the metrics you need are easily added using the `setupDataReadout()` met
 Use this [example](https://raw.githubusercontent.com/daniel-jong/esp8266_p1meter/master/assets/p1_sensors.yaml) for home assistant's `sensor.yaml`
 
 ## Known limitations and issues
-No known limitations and issues so far.
+My ESP32 can use the 5v from the `ISKRA AM550` but you first need to power it on via USB else it will bootloop. After it's booted and connected with the 5v port on the P1 connection you can unplug the ESP32 and it will stay on.
 
 ## Thanks to
 I want to Thank [JHockx](https://github.com/jhockx/esp8266_p1meter) because he told me he was working on a project reading out his P1 Meter. It sounded like a fun project but I had somewhat different hardware laying around so I started working with that. 
