@@ -8,7 +8,7 @@ WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
 /***********************************
- *          Main Setup
+            Main Setup
  ***********************************/
 void setup()
 {
@@ -49,7 +49,7 @@ void setup()
 }
 
 /***********************************
- *          Main Loop
+            Main Loop
  ***********************************/
 void loop()
 {
@@ -76,7 +76,15 @@ void loop()
         {
             LAST_RECONNECT_ATTEMPT = now;
 
-            if (mqttReconnect())
+            if (!mqttReconnect())
+            {
+#ifdef DEBUG
+                Serial.println("Connection to MQTT Failed! Rebooting...");
+#endif
+                delay(5000);
+                ESP.restart();
+            }
+            else
             {
                 LAST_RECONNECT_ATTEMPT = 0;
             }
@@ -86,27 +94,42 @@ void loop()
     {
         mqttClient.loop();
     }
+
+    // Check if we want a full update of all the data including the unchanged data.
+    if (now - LAST_FULL_UPDATE_SENT > UPDATE_FULL_INTERVAL)
+    {
+        for (int i = 0; i < NUMBER_OF_READOUTS; i++)
+        {
+            telegramObjects[i].sendData = true;
+            LAST_FULL_UPDATE_SENT = millis();
+        }
+    }
+
     if (now - LAST_UPDATE_SENT > UPDATE_INTERVAL)
     {
-        readP1Serial();
+        if (readP1Serial())
+        {
+            LAST_UPDATE_SENT = millis();
+            sendDataToBroker();
+        }
     }
 }
 
 /***********************************
- *          Setup Methods
+            Setup Methods
  ***********************************/
 
 /**
- * setupDataReadout()
- * 
- * This method can be used to create more data readout to mqtt topic.
- * Use the name for the mqtt topic.
- * The code for finding this in the telegram see 
- *  https://www.netbeheernederland.nl/_upload/Files/Slimme_meter_15_a727fce1f1.pdf for the dutch codes pag. 19 -23
- * Use startChar and endChar for setting the boundies where the value is in between.
- * Default startChar and endChar is '(' and ')'
- * Note: Make sure when you add or remove telegramObject to update the NUMBER_OF_READOUTS accordingly.
- */
+   setupDataReadout()
+
+   This method can be used to create more data readout to mqtt topic.
+   Use the name for the mqtt topic.
+   The code for finding this in the telegram see
+    https://www.netbeheernederland.nl/_upload/Files/Slimme_meter_15_a727fce1f1.pdf for the dutch codes pag. 19 -23
+   Use startChar and endChar for setting the boundies where the value is in between.
+   Default startChar and endChar is '(' and ')'
+   Note: Make sure when you add or remove telegramObject to update the NUMBER_OF_READOUTS accordingly.
+*/
 void setupDataReadout()
 {
     // 1-0:1.8.1(000992.992*kWh)
@@ -226,8 +249,8 @@ void setupDataReadout()
 }
 
 /**
- * Over the Air update setup
- */
+   Over the Air update setup
+*/
 void setupOTA()
 {
     ArduinoOTA

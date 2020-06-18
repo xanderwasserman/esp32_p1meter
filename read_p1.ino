@@ -122,7 +122,14 @@ bool decodeTelegram(int len)
     {
         if (strncmp(telegram, telegramObjects[i].code, strlen(telegramObjects[i].code)) == 0)
         {
-            telegramObjects[i].value = getValue(telegram, len, telegramObjects[i].startChar, telegramObjects[i].endChar);
+            long newValue = getValue(telegram, len, telegramObjects[i].startChar, telegramObjects[i].endChar);
+            if (newValue != telegramObjects[i].value)
+            {
+                telegramObjects[i].value = newValue;
+                telegramObjects[i].sendData = true;
+            }
+            break;
+
 #ifdef DEBUG
             Serial.println((String) "Found a Telegram object: " + telegramObjects[i].name + " value: " + telegramObjects[i].value);
 #endif
@@ -132,7 +139,7 @@ bool decodeTelegram(int len)
     return validCRCFound;
 }
 
-void readP1Serial()
+bool readP1Serial()
 {
     if (Serial2.available())
     {
@@ -152,16 +159,12 @@ void readP1Serial()
 
             bool result = decodeTelegram(len + 1);
             // When the CRC is check which is also the end of the telegram
-            // alle the data collected will be send to the mqtt broker.
+            // if valid decode return true
             if (result)
             {
-#ifdef DEBUG
-                Serial.println((String) "Result of the telgrame decode: " + result);
-                Serial.println("Sending the data");
-#endif
-                LAST_UPDATE_SENT = millis();
-                sendDataToBroker();
+                return true;
             }
         }
     }
+    return false;
 }

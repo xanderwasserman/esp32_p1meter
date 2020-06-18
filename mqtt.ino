@@ -54,6 +54,10 @@ void sendDataToBroker()
 #ifdef DEBUG
         Serial.println((String) "Sending: " + telegramObjects[i].name + " value: " + telegramObjects[i].value);
 #endif
-        sendMetric(telegramObjects[i].name, telegramObjects[i].value);
+        if (telegramObjects[i].sendData)
+        {
+            sendMetric(telegramObjects[i].name, telegramObjects[i].value);
+            telegramObjects[i].sendData = false;
+        }
     }
 }
