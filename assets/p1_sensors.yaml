@@ -67,3 +67,8 @@
 - platform: mqtt
   name: P1 Short Power Peaks
   state_topic: "sensors/power/p1meter/short_power_peaks"
+
+- platform: mqtt
+  name: P1 Voltage resolution
+  unit_of_measurement: 'V'
+  state_topic: "sensors/power/p1meter/instant_voltage"
