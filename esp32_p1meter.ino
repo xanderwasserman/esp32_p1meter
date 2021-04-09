@@ -237,7 +237,7 @@ void setupDataReadout()
     // 0-1:24.2.1(150531200000S)(00811.923*m3)
     // 0-1:24.2.1 = Gas (DSMR v4.0) on Kaifa MA105 meter
     telegramObjects[18].name = "gas_meter_m3";
-    strcpy(telegramObjects[18].code, "0-1:24.2.1");
+    strcpy(telegramObjects[18].code, "0-1:24.2.3");
 
 #ifdef DEBUG
     Serial.println("MQTT Topics initialized:");
