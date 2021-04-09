@@ -152,7 +152,7 @@ void setupDataReadout()
 
     // 1-0:2.7.0(00.000*kW) Actuele teruglevering (-P) in 1 Watt resolution
     telegramObjects[3].name = "actual_received";
-    strcpy(telegramObjects[3].code, "1-0:2.7");
+    strcpy(telegramObjects[3].code, "1-0:2.7.0");
     telegramObjects[3].endChar = '*';
 
     // 1-0:21.7.0(00.378*kW)
