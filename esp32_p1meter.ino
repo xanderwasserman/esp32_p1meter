@@ -232,26 +232,6 @@ void setupDataReadout()
     telegramObjects[13].name = "actual_tarif_group";
     strcpy(telegramObjects[13].code, "0-0:96.14.0");
 
-    // 0-0:96.7.21(00003)
-    // 0-0:96.7.21 = Aantal onderbrekingen Elektriciteit
-    telegramObjects[14].name = "short_power_outages";
-    strcpy(telegramObjects[14].code, "0-0:96.7.21");
-
-    // 0-0:96.7.9(00001)
-    // 0-0:96.7.9 = Aantal lange onderbrekingen Elektriciteit
-    telegramObjects[15].name = "long_power_outages";
-    strcpy(telegramObjects[15].code, "0-0:96.7.9");
-
-    // 1-0:32.32.0(00000)
-    // 1-0:32.32.0 = Aantal korte spanningsdalingen Elektriciteit in fase 1
-    telegramObjects[16].name = "short_power_drops";
-    strcpy(telegramObjects[16].code, "1-0:32.32.0");
-
-    // 1-0:32.36.0(00000)
-    // 1-0:32.36.0 = Aantal korte spanningsstijgingen Elektriciteit in fase 1
-    telegramObjects[17].name = "short_power_peaks";
-    strcpy(telegramObjects[17].code, "1-0:32.36.0");
-
     // 0-1:24.2.3(150531200000S)(00811.923*m3)
     // 0-1:24.2.3 = Gas (DSMR v5.0) on Belgian meters
     telegramObjects[18].name = "gas_meter_m3";
