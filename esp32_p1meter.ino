@@ -173,6 +173,24 @@ void setupDataReadout()
     strcpy(telegramObjects[6].code, "1-0:61.7.0");
     telegramObjects[6].endChar = '*';
 
+    // 1-0:22.7.0(00.378*kW)
+    // 1-0:22.7.0 = Instantaan vermogen Elektriciteit teruglevering L1
+    telegramObjects[4].name = "instant_power_return_l1";
+    strcpy(telegramObjects[4].code, "1-0:22.7.0");
+    telegramObjects[4].endChar = '*';
+
+    // 1-0:42.7.0(00.378*kW)
+    // 1-0:42.7.0 = Instantaan vermogen Elektriciteit teruglevering L2
+    telegramObjects[5].name = "instant_power_return_l2";
+    strcpy(telegramObjects[5].code, "1-0:42.7.0");
+    telegramObjects[5].endChar = '*';
+
+    // 1-0:62.7.0(00.378*kW)
+    // 1-0:62.7.0 = Instantaan vermogen Elektriciteit teruglevering L3
+    telegramObjects[6].name = "instant_power_return_l3";
+    strcpy(telegramObjects[6].code, "1-0:62.7.0");
+    telegramObjects[6].endChar = '*';
+
     // 1-0:31.7.0(002*A)
     // 1-0:31.7.0 = Instantane stroom Elektriciteit L1
     telegramObjects[7].name = "instant_power_current_l1";
