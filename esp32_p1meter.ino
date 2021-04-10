@@ -252,8 +252,8 @@ void setupDataReadout()
     telegramObjects[17].name = "short_power_peaks";
     strcpy(telegramObjects[17].code, "1-0:32.36.0");
 
-    // 0-1:24.2.1(150531200000S)(00811.923*m3)
-    // 0-1:24.2.1 = Gas (DSMR v4.0) on Kaifa MA105 meter
+    // 0-1:24.2.3(150531200000S)(00811.923*m3)
+    // 0-1:24.2.3 = Gas (DSMR v5.0) on Belgian meters
     telegramObjects[18].name = "gas_meter_m3";
     strcpy(telegramObjects[18].code, "0-1:24.2.3");
 
