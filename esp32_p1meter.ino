@@ -134,14 +134,24 @@ void setupDataReadout()
 {
     // 1-0:1.8.1(000992.992*kWh)
     // 1-0:1.8.1 = Elektra verbruik laag tarief (DSMR v5.0)
-    telegramObjects[0].name = "consumption_low_tarif";
+    telegramObjects[0].name = "consumption_tarif_1";
     strcpy(telegramObjects[0].code, "1-0:1.8.1");
     telegramObjects[0].endChar = '*';
 
     // 1-0:1.8.2(000560.157*kWh)
     // 1-0:1.8.2 = Elektra verbruik hoog tarief (DSMR v5.0)
-    telegramObjects[1].name = "consumption_high_tarif";
+    telegramObjects[1].name = "consumption_tarif_2";
     strcpy(telegramObjects[1].code, "1-0:1.8.2");
+    telegramObjects[1].endChar = '*';
+
+    telegramObjects[0].name = "received_tarif_1";
+    strcpy(telegramObjects[0].code, "1-0:2.8.1");
+    telegramObjects[0].endChar = '*';
+
+    // 1-0:1.8.2(000560.157*kWh)
+    // 1-0:1.8.2 = Elektra verbruik hoog tarief (DSMR v5.0)
+    telegramObjects[1].name = "received_tarif_2";
+    strcpy(telegramObjects[1].code, "1-0:2.8.2");
     telegramObjects[1].endChar = '*';
 
     // 1-0:1.7.0(00.424*kW) Actueel verbruik
@@ -236,6 +246,7 @@ void setupDataReadout()
     // 0-1:24.2.3 = Gas (DSMR v5.0) on Belgian meters
     telegramObjects[18].name = "gas_meter_m3";
     strcpy(telegramObjects[18].code, "0-1:24.2.3");
+    telegramObjects[12].endChar = '*';
 
 #ifdef DEBUG
     Serial.println("MQTT Topics initialized:");
