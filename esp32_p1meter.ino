@@ -7,6 +7,8 @@
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
+#define LED_BUILTIN 2
+
 /***********************************
             Main Setup
  ***********************************/
@@ -16,7 +18,8 @@ void setup()
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
     Serial.begin(BAUD_RATE);
-    Serial2.begin(BAUD_RATE, SERIAL_8N1, RXD2, TXD2, true);
+    Serial2.begin(P1_BAUD_RATE, SERIAL_7E1, RXD2, TXD2, true);
+    Serial2.setRxInvert(true);
 
 #ifdef DEBUG
     Serial.println("Booting - DEBUG mode on");
@@ -107,12 +110,15 @@ void loop()
 
     if (now - LAST_UPDATE_SENT > UPDATE_INTERVAL)
     {
-        if (readP1Serial())
-        {
-            LAST_UPDATE_SENT = millis();
-            sendDataToBroker();
-        }
+      LAST_UPDATE_SENT = millis();
+
+      if (readP1Serial())
+      {
+          Serial.println("Successfully read P1 serial");
+          sendDataToBroker();
+      }
     }
+    delay(1);
 }
 
 /***********************************
@@ -132,121 +138,94 @@ void loop()
 */
 void setupDataReadout()
 {
-    // 1-0:1.8.1(000992.992*kWh)
-    // 1-0:1.8.1 = Elektra verbruik laag tarief (DSMR v5.0)
+    // Consumption Tariffs
     telegramObjects[0].name = "consumption_tarif_1";
     strcpy(telegramObjects[0].code, "1-0:1.8.1");
     telegramObjects[0].endChar = '*';
 
-    // 1-0:1.8.2(000560.157*kWh)
-    // 1-0:1.8.2 = Elektra verbruik hoog tarief (DSMR v5.0)
     telegramObjects[1].name = "consumption_tarif_2";
     strcpy(telegramObjects[1].code, "1-0:1.8.2");
     telegramObjects[1].endChar = '*';
 
-    telegramObjects[0].name = "received_tarif_1";
-    strcpy(telegramObjects[0].code, "1-0:2.8.1");
-    telegramObjects[0].endChar = '*';
-
-    // 1-0:1.8.2(000560.157*kWh)
-    // 1-0:1.8.2 = Elektra verbruik hoog tarief (DSMR v5.0)
-    telegramObjects[1].name = "received_tarif_2";
-    strcpy(telegramObjects[1].code, "1-0:2.8.2");
-    telegramObjects[1].endChar = '*';
-
-    // 1-0:1.7.0(00.424*kW) Actueel verbruik
-    // 1-0:1.7.x = Electricity consumption actual usage (DSMR v5.0)
-    telegramObjects[2].name = "actual_consumption";
-    strcpy(telegramObjects[2].code, "1-0:1.7.0");
+    // Received Tariffs
+    telegramObjects[2].name = "received_tarif_1";
+    strcpy(telegramObjects[2].code, "1-0:2.8.1");
     telegramObjects[2].endChar = '*';
 
-    // 1-0:2.7.0(00.000*kW) Actuele teruglevering (-P) in 1 Watt resolution
-    telegramObjects[3].name = "actual_received";
-    strcpy(telegramObjects[3].code, "1-0:2.7.0");
+    telegramObjects[3].name = "received_tarif_2";
+    strcpy(telegramObjects[3].code, "1-0:2.8.2");
     telegramObjects[3].endChar = '*';
 
-    // 1-0:21.7.0(00.378*kW)
-    // 1-0:21.7.0 = Instantaan vermogen Elektriciteit levering L1
-    telegramObjects[4].name = "instant_power_usage_l1";
-    strcpy(telegramObjects[4].code, "1-0:21.7.0");
+    // Instantaneous Power
+    telegramObjects[4].name = "actual_consumption";
+    strcpy(telegramObjects[4].code, "1-0:1.7.0");
     telegramObjects[4].endChar = '*';
 
-    // 1-0:41.7.0(00.378*kW)
-    // 1-0:41.7.0 = Instantaan vermogen Elektriciteit levering L2
-    telegramObjects[5].name = "instant_power_usage_l2";
-    strcpy(telegramObjects[5].code, "1-0:41.7.0");
+    telegramObjects[5].name = "actual_received";
+    strcpy(telegramObjects[5].code, "1-0:2.7.0");
     telegramObjects[5].endChar = '*';
 
-    // 1-0:61.7.0(00.378*kW)
-    // 1-0:61.7.0 = Instantaan vermogen Elektriciteit levering L3
-    telegramObjects[6].name = "instant_power_usage_l3";
-    strcpy(telegramObjects[6].code, "1-0:61.7.0");
+    // Instantaneous Power per Phase
+    telegramObjects[6].name = "instant_power_usage_l1";
+    strcpy(telegramObjects[6].code, "1-0:21.7.0");
     telegramObjects[6].endChar = '*';
 
-    // 1-0:22.7.0(00.378*kW)
-    // 1-0:22.7.0 = Instantaan vermogen Elektriciteit teruglevering L1
-    telegramObjects[4].name = "instant_power_return_l1";
-    strcpy(telegramObjects[4].code, "1-0:22.7.0");
-    telegramObjects[4].endChar = '*';
-
-    // 1-0:42.7.0(00.378*kW)
-    // 1-0:42.7.0 = Instantaan vermogen Elektriciteit teruglevering L2
-    telegramObjects[5].name = "instant_power_return_l2";
-    strcpy(telegramObjects[5].code, "1-0:42.7.0");
-    telegramObjects[5].endChar = '*';
-
-    // 1-0:62.7.0(00.378*kW)
-    // 1-0:62.7.0 = Instantaan vermogen Elektriciteit teruglevering L3
-    telegramObjects[6].name = "instant_power_return_l3";
-    strcpy(telegramObjects[6].code, "1-0:62.7.0");
-    telegramObjects[6].endChar = '*';
-
-    // 1-0:31.7.0(002*A)
-    // 1-0:31.7.0 = Instantane stroom Elektriciteit L1
-    telegramObjects[7].name = "instant_power_current_l1";
-    strcpy(telegramObjects[7].code, "1-0:31.7.0");
+    telegramObjects[7].name = "instant_power_usage_l2";
+    strcpy(telegramObjects[7].code, "1-0:41.7.0");
     telegramObjects[7].endChar = '*';
 
-    // 1-0:51.7.0(002*A)
-    // 1-0:51.7.0 = Instantane stroom Elektriciteit L2
-    telegramObjects[8].name = "instant_power_current_l2";
-    strcpy(telegramObjects[8].code, "1-0:51.7.0");
+    telegramObjects[8].name = "instant_power_usage_l3";
+    strcpy(telegramObjects[8].code, "1-0:61.7.0");
     telegramObjects[8].endChar = '*';
 
-    // 1-0:71.7.0(002*A)
-    // 1-0:71.7.0 = Instantane stroom Elektriciteit L3
-    telegramObjects[9].name = "instant_power_current_l3";
-    strcpy(telegramObjects[9].code, "1-0:71.7.0");
+    // Instantaneous Power Return per Phase
+    telegramObjects[9].name = "instant_power_return_l1";
+    strcpy(telegramObjects[9].code, "1-0:22.7.0");
     telegramObjects[9].endChar = '*';
 
-    // 1-0:32.7.0(232.0*V)
-    // 1-0:32.7.0 = Voltage L1
-    telegramObjects[10].name = "instant_voltage_l1";
-    strcpy(telegramObjects[10].code, "1-0:32.7.0");
+    telegramObjects[10].name = "instant_power_return_l2";
+    strcpy(telegramObjects[10].code, "1-0:42.7.0");
     telegramObjects[10].endChar = '*';
 
-    // 1-0:52.7.0(232.0*V)
-    // 1-0:52.7.0 = Voltage L2
-    telegramObjects[11].name = "instant_voltage_l2";
-    strcpy(telegramObjects[11].code, "1-0:52.7.0");
+    telegramObjects[11].name = "instant_power_return_l3";
+    strcpy(telegramObjects[11].code, "1-0:62.7.0");
     telegramObjects[11].endChar = '*';
 
-    // 1-0:72.7.0(232.0*V)
-    // 1-0:72.7.0 = Voltage L3
-    telegramObjects[12].name = "instant_voltage_l3";
-    strcpy(telegramObjects[12].code, "1-0:72.7.0");
+    // Instantaneous Current
+    telegramObjects[12].name = "instant_power_current_l1";
+    strcpy(telegramObjects[12].code, "1-0:31.7.0");
     telegramObjects[12].endChar = '*';
 
-    // 0-0:96.14.0(0001)
-    // 0-0:96.14.0 = Actual Tarif
-    telegramObjects[13].name = "actual_tarif_group";
-    strcpy(telegramObjects[13].code, "0-0:96.14.0");
+    telegramObjects[13].name = "instant_power_current_l2";
+    strcpy(telegramObjects[13].code, "1-0:51.7.0");
+    telegramObjects[13].endChar = '*';
 
-    // 0-1:24.2.3(150531200000S)(00811.923*m3)
-    // 0-1:24.2.3 = Gas (DSMR v5.0) on Belgian meters
-    telegramObjects[18].name = "gas_meter_m3";
-    strcpy(telegramObjects[18].code, "0-1:24.2.3");
-    telegramObjects[12].endChar = '*';
+    telegramObjects[14].name = "instant_power_current_l3";
+    strcpy(telegramObjects[14].code, "1-0:71.7.0");
+    telegramObjects[14].endChar = '*';
+
+    // Voltage
+    telegramObjects[15].name = "instant_voltage_l1";
+    strcpy(telegramObjects[15].code, "1-0:32.7.0");
+    telegramObjects[15].endChar = '*';
+
+    telegramObjects[16].name = "instant_voltage_l2";
+    strcpy(telegramObjects[16].code, "1-0:52.7.0");
+    telegramObjects[16].endChar = '*';
+
+    telegramObjects[17].name = "instant_voltage_l3";
+    strcpy(telegramObjects[17].code, "1-0:72.7.0");
+    telegramObjects[17].endChar = '*';
+
+    // Actual Tarif
+    telegramObjects[18].name = "actual_tarif_group";
+    strcpy(telegramObjects[18].code, "0-0:96.14.0");
+    telegramObjects[18].endChar = ')';
+
+    // Gas Meter Reading
+    telegramObjects[19].name = "gas_meter_m3";
+    strcpy(telegramObjects[19].code, "0-1:24.2.3");
+    telegramObjects[19].endChar = '*'; 
 
 #ifdef DEBUG
     Serial.println("MQTT Topics initialized:");

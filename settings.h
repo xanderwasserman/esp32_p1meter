@@ -15,12 +15,13 @@
 #define OTA_PASSWORD "admin"
 
 #define BAUD_RATE 115200
+#define P1_BAUD_RATE 115200
 #define RXD2 16
 #define TXD2 17
 #define P1_MAXLINELENGTH 1050
 
 #define MQTT_MAX_RECONNECT_TRIES 100
-#define MQTT_ROOT_TOPIC "sensors/power/p1meter"
+#define MQTT_ROOT_TOPIC "homeassistant/sensors/power/p1meter"
 
 #define NUMBER_OF_READOUTS 19
 

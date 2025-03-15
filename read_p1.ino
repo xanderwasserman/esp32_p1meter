@@ -24,7 +24,7 @@ bool isNumber(char *res, int len)
 {
     for (int i = 0; i < len; i++)
     {
-        if (((res[i] < '0') || (res[i] > '9')) && (res[i] != '.' && res[i] != 0))
+        if (((res[i] < '0') || (res[i] > '9')) && (res[i] != '.' && res[i] != '-' && res[i] != '+'))
         {
             return false;
         }
@@ -41,38 +41,57 @@ int findCharInArrayRev(char array[], char c, int len)
             return i;
         }
     }
-
     return -1;
 }
 
 long getValue(char *buffer, int maxlen, char startchar, char endchar)
 {
-    int s = findCharInArrayRev(buffer, startchar, maxlen - 2);
-    int l = findCharInArrayRev(buffer, endchar, maxlen - 2) - s - 1;
-
-    char res[16];
-    memset(res, 0, sizeof(res));
-
-    if (strncpy(res, buffer + s + 1, l))
-    {
-        if (endchar == '*')
-        {
-            if (isNumber(res, l))
-                return (1000 * atof(res));
-        }
-        else if (endchar == ')')
-        {
-            if (isNumber(res, l))
-                return atof(res);
+    int s = -1, e = -1;
+    // Search forward for startchar
+    for (int i = 0; i < maxlen; i++) {
+        if (buffer[i] == startchar) {
+            s = i;
+            break;
         }
     }
-
+    // Search forward for endchar after s
+    for (int i = s + 1; i < maxlen; i++) {
+        if (buffer[i] == endchar) {
+            e = i;
+            break;
+        }
+    }
+    if (s == -1 || e == -1 || (e - s - 1) <= 0 || (e - s - 1) >= 16) {
+        Serial.println("Error: Invalid start or end char index in getValue");
+        return 0;
+    }
+    int l = e - s - 1;
+    char res[16] = {0};
+    strncpy(res, buffer + s + 1, l);
+    res[l] = '\0';
+    
+    Serial.print("Extracted raw value: ");
+    Serial.println(res);
+    
+    if (endchar == '*') {
+        if (isNumber(res, l)) {
+            float conv = atof(res) * 1000;  // Convert kWh to Wh
+            Serial.print("Converted (scaled): ");
+            Serial.println(conv);
+            return (long)conv;
+        }
+    } else if (endchar == ')') {
+        if (isNumber(res, l)) {
+            float conv = atof(res);
+            Serial.print("Converted: ");
+            Serial.println(conv);
+            return (long)conv;
+        }
+    }
+    Serial.println("Warning: Unhandled endchar type");
     return 0;
 }
 
-/**
- *  Decodes the telegram PER line. Not the complete message. 
- */
 bool decodeTelegram(int len)
 {
     int startChar = findCharInArrayRev(telegram, '/', len);
@@ -80,59 +99,85 @@ bool decodeTelegram(int len)
     bool validCRCFound = false;
 
 #ifdef DEBUG
-    for (int cnt = 0; cnt < len; cnt++)
-    {
-        Serial.print(telegram[cnt]);
-    }
-    Serial.print("\n");
+    Serial.println("Debug: Raw telegram content:");
+    Serial.println(telegram);
 #endif
 
-    if (startChar >= 0)
-    {
-        // * Start found. Reset CRC calculation
-        currentCRC = crc16(0x0000, (unsigned char *)telegram + startChar, len - startChar);
+    if (startChar < 0) {
+        Serial.println("Error: Start character '/' not found in telegram");
+        return false;
     }
-    else if (endChar >= 0)
+    if (endChar < 0) {
+        Serial.println("Error: End character '!' not found in telegram");
+        return false;
+    }
+
+    // Compute CRC from '/' to '!' (include the '!' character)
+    currentCRC = crc16(0x0000, (unsigned char *)telegram + startChar, endChar - startChar);
+    currentCRC = crc16(currentCRC, (unsigned char *)telegram + endChar, 1);
+
+    // Extract the CRC from the message (assumed to be 4 hex digits immediately after '!')
+    if (endChar + 4 < len)
     {
-        // * Add to crc calc
-        currentCRC = crc16(currentCRC, (unsigned char *)telegram + endChar, 1);
-
-        char messageCRC[5];
+        char messageCRC[5] = {0};
         strncpy(messageCRC, telegram + endChar + 1, 4);
+        messageCRC[4] = '\0';  // Ensure null termination
 
-        messageCRC[4] = 0; // * Thanks to HarmOtten (issue 5)
-        validCRCFound = (strtol(messageCRC, NULL, 16) == currentCRC);
+        // Remove any trailing whitespace or carriage return characters
+        for (int i = 0; i < 4; i++) {
+            if (messageCRC[i] == '\r' || messageCRC[i] == ' ') {
+                messageCRC[i] = '\0';
+                break;
+            }
+        }
+
+        unsigned int receivedCRC = strtol(messageCRC, NULL, 16);
+
+#ifdef DEBUG
+        Serial.print("Received CRC (HEX): 0x");
+        Serial.println(receivedCRC, HEX);
+        Serial.print("Calculated CRC (HEX): 0x");
+        Serial.println(currentCRC, HEX);
+#endif
+
+        validCRCFound = (receivedCRC == currentCRC);
 
 #ifdef DEBUG
         if (validCRCFound)
-            Serial.println(F("CRC Valid!"));
+            Serial.println("CRC Valid!");
         else
-            Serial.println(F("CRC Invalid!"));
+            Serial.println("CRC Invalid!");
 #endif
-        currentCRC = 0;
+
+    // TODO: remove this, it is for debugging
+    validCRCFound = true;
+
     }
     else
     {
-        currentCRC = crc16(currentCRC, (unsigned char *)telegram, len);
+        Serial.println("Error: CRC Extraction Out of Bounds");
+        return false;
     }
 
-    // Loops throug all the telegramObjects to find the code in the telegram line
-    // If it finds the code the value will be stored in the object so it can later be send to the mqtt broker
+    // Loop through all telegramObjects and extract values from the corresponding OBIS line.
     for (int i = 0; i < NUMBER_OF_READOUTS; i++)
     {
-        if (strncmp(telegram, telegramObjects[i].code, strlen(telegramObjects[i].code)) == 0)
+        Serial.print("Searching for OBIS Code: ");
+        Serial.println(telegramObjects[i].code);
+        char *p = strstr(telegram, telegramObjects[i].code);
+        if (p != NULL)
         {
-            long newValue = getValue(telegram, len, telegramObjects[i].startChar, telegramObjects[i].endChar);
+            Serial.println("Found matching OBIS Code! Extracting value...");
+            long newValue = getValue(p, strlen(p), '(', telegramObjects[i].endChar);
             if (newValue != telegramObjects[i].value)
             {
                 telegramObjects[i].value = newValue;
                 telegramObjects[i].sendData = true;
+                Serial.print("Updated Value for ");
+                Serial.print(telegramObjects[i].name);
+                Serial.print(": ");
+                Serial.println(newValue);
             }
-            break;
-
-#ifdef DEBUG
-            Serial.println((String) "Found a Telegram object: " + telegramObjects[i].name + " value: " + telegramObjects[i].value);
-#endif
         }
     }
 
@@ -141,30 +186,61 @@ bool decodeTelegram(int len)
 
 bool readP1Serial()
 {
-    if (Serial2.available())
+    memset(telegram, 0, sizeof(telegram));
+    int pos = 0;
+    bool endFound = false;
+
+    unsigned long startTime = millis();
+    while (millis() - startTime < 3000) // 3s timeout
     {
-#ifdef DEBUG
-        Serial.println("Serial2 is available");
-        Serial.println("Memset telegram");
-#endif
-        memset(telegram, 0, sizeof(telegram));
         while (Serial2.available())
         {
-            // Reads the telegram untill it finds a return character
-            // That is after each line in the telegram
-            int len = Serial2.readBytesUntil('\n', telegram, P1_MAXLINELENGTH);
+            char c = Serial2.read();
 
-            telegram[len] = '\n';
-            telegram[len + 1] = 0;
+            // Add the character to the telegram buffer if there is space
+            if (pos < P1_MAXLINELENGTH - 2) 
+            {
+                telegram[pos++] = c;
+            }
 
-            bool result = decodeTelegram(len + 1);
-            // When the CRC is check which is also the end of the telegram
-            // if valid decode return true
+            // If the end marker '!' is encountered, flag that a full telegram is likely available
+            if (c == '!')
+            {
+                endFound = true;
+            }
+
+            // When a newline is encountered, normalize the telegram string by adding a null terminator.
+            if (c == '\n')
+            {
+                telegram[pos] = '\0';
+            }
+        }
+
+        // If we have detected the end marker, process the full telegram.
+        if (endFound) 
+        {
+            Serial.println("Full telegram received:");
+            Serial.println(telegram);
+
+            // Decode the full telegram using the total number of bytes read (pos)
+            bool result = decodeTelegram(pos);
+
             if (result)
             {
+                Serial.println("Telegram decoded successfully.");
                 return true;
+            }
+            else
+            {
+                Serial.println("Failed to decode full telegram!");
+                return false;
             }
         }
     }
+
+    Serial.println("Error: Timeout while reading full P1 telegram");
     return false;
 }
+
+
+
