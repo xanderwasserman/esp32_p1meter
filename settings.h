@@ -1,3 +1,5 @@
+#pragma once
+
 #define DEBUG
 // Update treshold in milliseconds, messages will only be sent on this interval
 #define UPDATE_INTERVAL 1000 // 1 second
@@ -23,19 +25,20 @@
 #define MQTT_MAX_RECONNECT_TRIES 100
 #define MQTT_ROOT_TOPIC "homeassistant/sensors/power/p1meter"
 
-#define NUMBER_OF_READOUTS 19
+#define NUMBER_OF_READOUTS 20
 
-long LAST_RECONNECT_ATTEMPT = 0;
-long LAST_UPDATE_SENT = 0;
-long LAST_FULL_UPDATE_SENT = 0;
+// Store last timestamps
+extern long LAST_RECONNECT_ATTEMPT;
+extern long LAST_UPDATE_SENT;
+extern long LAST_FULL_UPDATE_SENT;
 
-char WIFI_SSID[32] = "";
-char WIFI_PASS[32] = "";
-
-char MQTT_HOST[64] = "";
-char MQTT_PORT[6] = "";
-char MQTT_USER[32] = "";
-char MQTT_PASS[32] = "";
+// Allocate space for WiFi & MQTT credentials (start them empty)
+extern char WIFI_SSID[32];
+extern char WIFI_PASS[32];
+extern char MQTT_HOST[64];
+extern char MQTT_PORT[6];
+extern char MQTT_USER[32];
+extern char MQTT_PASS[32];
 
 char telegram[P1_MAXLINELENGTH];
 
@@ -49,6 +52,6 @@ struct TelegramDecodedObject
   bool sendData = true;
 };
 
-struct TelegramDecodedObject telegramObjects[NUMBER_OF_READOUTS];
+extern struct TelegramDecodedObject telegramObjects[NUMBER_OF_READOUTS];
 
 unsigned int currentCRC = 0;

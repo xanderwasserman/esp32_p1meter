@@ -1,8 +1,16 @@
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
+#include <WiFiManager.h>
 
 #include "settings.h"
+#include "read_p1.h"
+
+void sendDataToBroker();
+void blinkLed(int times, int delayMs);
+bool mqttReconnect();  // your existing method to connect to MQTT
+void setupDataReadout();
+void setupOTA();
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
@@ -28,98 +36,136 @@ void setup()
     blinkLed(2, 2000);
     // Blinking 2 times fast and two times slower to indicate DEBUG mode
 #endif
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
-    while (WiFi.waitForConnectResult() != WL_CONNECTED)
-    {
-#ifdef DEBUG
-        Serial.println("Connection Failed! Rebooting...");
-#endif
-        delay(5000);
-        ESP.restart();
-    }
-    delay(3000);
-    setupDataReadout();
-    setupOTA();
 
-    mqttClient.setServer(MQTT_HOST, atoi(MQTT_PORT));
-    blinkLed(5, 500); // Blink 5 times to indicate end of setup
+    // -------------------------------------------------
+    // 1) Use WiFiManager to handle WiFi credentials
+    // -------------------------------------------------
+    WiFiManager wm;
+
+    // Create custom parameters for MQTT (server, port, user, pass)
+    // ID, Placeholder text, Default (initial) value, length
+    WiFiManagerParameter custom_mqtt_server("server", "MQTT Server", MQTT_HOST, 64);
+    WiFiManagerParameter custom_mqtt_port("port", "MQTT Port", MQTT_PORT, 6);
+    WiFiManagerParameter custom_mqtt_user("user", "MQTT User", MQTT_USER, 32);
+    WiFiManagerParameter custom_mqtt_password("pass", "MQTT Password", MQTT_PASS, 32);
+
+    // Add these MQTT parameters to WiFiManager
+    wm.addParameter(&custom_mqtt_server);
+    wm.addParameter(&custom_mqtt_port);
+    wm.addParameter(&custom_mqtt_user);
+    wm.addParameter(&custom_mqtt_password);
+
+    // Optionally, you can set a custom config portal name
+    // or pass a password as well: wm.autoConnect("p1meter", "ConfigPortalPassword");
+    // The simplest form:
+    wm.autoConnect(HOSTNAME);
+
+    // If you get here, WiFi is connected and credentials are saved.
+    // Retrieve the MQTT values the user entered
+    strcpy(MQTT_HOST, custom_mqtt_server.getValue());
+    strcpy(MQTT_PORT, custom_mqtt_port.getValue());
+    strcpy(MQTT_USER, custom_mqtt_user.getValue());
+    strcpy(MQTT_PASS, custom_mqtt_password.getValue());
+
 #ifdef DEBUG
-    Serial.println("Ready");
+    Serial.println("Wi-Fi connected via WiFiManager.");
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+    Serial.println("MQTT Settings from WiFiManager:");
+    Serial.print("  Host: ");   Serial.println(MQTT_HOST);
+    Serial.print("  Port: ");   Serial.println(MQTT_PORT);
+    Serial.print("  User: ");   Serial.println(MQTT_USER);
+    Serial.print("  Pass: ");   Serial.println(MQTT_PASS);
+#endif
+
+    // -------------------------------------------------
+    // 2) Proceed with rest of setup logic
+    // -------------------------------------------------
+    setupDataReadout(); // Prepare data readout structures
+    setupOTA();         // Initialize Over-the-Air updates
+
+    // Configure the MQTT client with the user-provided server/port
+    mqttClient.setServer(MQTT_HOST, atoi(MQTT_PORT));
+
+    blinkLed(5, 500); // Blink 5 times to indicate end of setup
+
+#ifdef DEBUG
+    Serial.println("Ready");
 #endif
 }
 
 /***********************************
             Main Loop
  ***********************************/
-void loop()
-{
-    long now = millis();
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        blinkLed(20, 50); // Blink fast to indicate failed WiFi connection
-        WiFi.begin(WIFI_SSID, WIFI_PASS);
-        while (WiFi.waitForConnectResult() != WL_CONNECTED)
-        {
-#ifdef DEBUG
-            Serial.println("Connection Failed! Rebooting...");
-#endif
-            delay(5000);
-            ESP.restart();
-        }
-    }
-
-    ArduinoOTA.handle();
-
-    if (!mqttClient.connected())
-    {
-        if (now - LAST_RECONNECT_ATTEMPT > 5000)
-        {
-            LAST_RECONNECT_ATTEMPT = now;
-
-            if (!mqttReconnect())
-            {
-#ifdef DEBUG
-                Serial.println("Connection to MQTT Failed! Rebooting...");
-#endif
-                delay(5000);
-                ESP.restart();
-            }
-            else
-            {
-                LAST_RECONNECT_ATTEMPT = 0;
-            }
-        }
-    }
-    else
-    {
-        mqttClient.loop();
-    }
-
-    // Check if we want a full update of all the data including the unchanged data.
-    if (now - LAST_FULL_UPDATE_SENT > UPDATE_FULL_INTERVAL)
-    {
-        for (int i = 0; i < NUMBER_OF_READOUTS; i++)
-        {
-            telegramObjects[i].sendData = true;
-            LAST_FULL_UPDATE_SENT = millis();
-        }
-    }
-
-    if (now - LAST_UPDATE_SENT > UPDATE_INTERVAL)
-    {
-      LAST_UPDATE_SENT = millis();
-
-      if (readP1Serial())
-      {
-          Serial.println("Successfully read P1 serial");
-          sendDataToBroker();
-      }
-    }
-    delay(1);
-}
+ void loop()
+ {
+     long now = millis();
+ 
+     // Check Wi-Fi status
+     if (WiFi.status() != WL_CONNECTED)
+     {
+         // Blink fast to indicate lost WiFi
+         blinkLed(20, 50);
+         // Attempt to reconnect
+         WiFi.reconnect();
+     }
+ 
+     // Handle OTA updates
+     ArduinoOTA.handle();
+ 
+     // Check MQTT connection
+     if (!mqttClient.connected())
+     {
+         if (now - LAST_RECONNECT_ATTEMPT > 5000)
+         {
+             LAST_RECONNECT_ATTEMPT = now;
+ 
+             if (!mqttReconnect())
+             {
+ #ifdef DEBUG
+                 Serial.println("Connection to MQTT Failed! Rebooting...");
+ #endif
+                 delay(5000);
+                 ESP.restart();
+             }
+             else
+             {
+                 LAST_RECONNECT_ATTEMPT = 0;
+             }
+         }
+     }
+     else
+     {
+         mqttClient.loop();
+     }
+ 
+     // Check if we want a full update
+     if (now - LAST_FULL_UPDATE_SENT > UPDATE_FULL_INTERVAL)
+     {
+         for (int i = 0; i < NUMBER_OF_READOUTS; i++)
+         {
+             telegramObjects[i].sendData = true;
+         }
+         LAST_FULL_UPDATE_SENT = millis();
+     }
+ 
+     // Regular update interval
+     if (now - LAST_UPDATE_SENT > UPDATE_INTERVAL)
+     {
+         LAST_UPDATE_SENT = millis();
+ 
+         // If the P1 data was read successfully, publish to MQTT
+         if (readP1Serial())
+         {
+ #ifdef DEBUG
+             Serial.println("Successfully read P1 serial");
+ #endif
+             sendDataToBroker();
+         }
+     }
+ 
+     delay(1);
+ }
 
 /***********************************
             Setup Methods
@@ -260,17 +306,14 @@ void setupOTA()
         })
         .onError([](ota_error_t error) {
             Serial.printf("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR)
-                Serial.println("Auth Failed");
-            else if (error == OTA_BEGIN_ERROR)
-                Serial.println("Begin Failed");
-            else if (error == OTA_CONNECT_ERROR)
-                Serial.println("Connect Failed");
-            else if (error == OTA_RECEIVE_ERROR)
-                Serial.println("Receive Failed");
-            else if (error == OTA_END_ERROR)
-                Serial.println("End Failed");
+            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR) Serial.println("End Failed");
         });
 
+    ArduinoOTA.setHostname(HOSTNAME);
+    ArduinoOTA.setPassword(OTA_PASSWORD);
     ArduinoOTA.begin();
 }
