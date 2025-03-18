@@ -1,6 +1,7 @@
 name: Arduino Build Check (ESP32)
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
@@ -16,10 +17,8 @@ jobs:
         uses: actions/checkout@v2
 
       # Step 2: Install Arduino CLI
-      - name: Set up Arduino CLI
-        uses: arduino/setup-arduino-cli@v1
-        with:
-          version: latest  # or a specific version (e.g., v0.31.0)
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
 
       # Step 3: Install ESP32 core
       - name: Install ESP32 core
