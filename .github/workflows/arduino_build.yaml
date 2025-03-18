@@ -1,0 +1,44 @@
+name: Arduino Build Check (ESP32)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repo
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      # Step 2: Install Arduino CLI
+      - name: Set up Arduino CLI
+        uses: arduino/setup-arduino-cli@v1
+        with:
+          version: latest  # or a specific version (e.g., v0.31.0)
+
+      # Step 3: Install ESP32 core
+      - name: Install ESP32 core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+
+      # Step 4: Install required libraries
+      - name: Install Libraries
+        run: |
+          arduino-cli lib install "PubSubClient"
+          arduino-cli lib install "WiFiManager"
+
+      # Step 5: Compile the sketch
+      - name: Compile the Arduino sketch for ESP32
+        run: |
+          # Adjust FQBN and sketch path below as needed. 
+          # For ESP32 DevKit v1, "esp32:esp32:esp32" is often correct. 
+          # If your code is in a folder named "MySketch",
+          # you might do: arduino-cli compile --fqbn esp32:esp32:esp32 ./MySketch
+          
+          arduino-cli compile --fqbn esp32:esp32:esp32 esp32_p1meter.ino
