@@ -1,4 +1,7 @@
-#pragma once
+#ifndef SETTINGS_H
+#define SETTINGS_H
+
+#include <Arduino.h>
 
 #define DEBUG
 // Update treshold in milliseconds, messages will only be sent on this interval
@@ -40,7 +43,7 @@ extern char MQTT_PORT[6];
 extern char MQTT_USER[32];
 extern char MQTT_PASS[32];
 
-char telegram[P1_MAXLINELENGTH];
+extern char telegram[P1_MAXLINELENGTH];
 
 struct TelegramDecodedObject
 {
@@ -55,3 +58,5 @@ struct TelegramDecodedObject
 extern struct TelegramDecodedObject telegramObjects[NUMBER_OF_READOUTS];
 
 unsigned int currentCRC = 0;
+
+#endif
