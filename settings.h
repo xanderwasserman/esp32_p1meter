@@ -57,6 +57,6 @@ struct TelegramDecodedObject
 
 extern struct TelegramDecodedObject telegramObjects[NUMBER_OF_READOUTS];
 
-unsigned int currentCRC = 0;
+extern unsigned int currentCRC = 0;
 
 #endif

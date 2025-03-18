@@ -15,3 +15,5 @@ char MQTT_PASS[32] = "";
 char telegram[P1_MAXLINELENGTH];
 
 struct TelegramDecodedObject telegramObjects[NUMBER_OF_READOUTS];
+
+unsigned int currentCRC = 0;
