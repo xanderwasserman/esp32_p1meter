@@ -2,6 +2,7 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
+#include <Preferences.h>
 
 #include "settings.h"
 #include "read_p1.h"
@@ -38,7 +39,32 @@ void setup()
 #endif
 
     // -------------------------------------------------
-    // 1) Use WiFiManager to handle WiFi credentials
+    //   Load stored MQTT credentials using Preferences
+    // -------------------------------------------------
+    Preferences preferences;
+    preferences.begin("mqtt", false);
+    String storedHost = preferences.getString("mqtt_host", "");
+    String storedPort = preferences.getString("mqtt_port", "");
+    String storedUser = preferences.getString("mqtt_user", "");
+    String storedPass = preferences.getString("mqtt_pass", "");
+    
+    // Copy stored values to the global char arrays if available
+    if (storedHost.length() > 0) {
+        storedHost.toCharArray(MQTT_HOST, sizeof(MQTT_HOST));
+    }
+    if (storedPort.length() > 0) {
+        storedPort.toCharArray(MQTT_PORT, sizeof(MQTT_PORT));
+    }
+    if (storedUser.length() > 0) {
+        storedUser.toCharArray(MQTT_USER, sizeof(MQTT_USER));
+    }
+    if (storedPass.length() > 0) {
+        storedPass.toCharArray(MQTT_PASS, sizeof(MQTT_PASS));
+    }
+
+    // -------------------------------------------------
+    //    Use WiFiManager to handle WiFi credentials and 
+    //    configure MQTT parameters using custom parameters.
     // -------------------------------------------------
     WiFiManager wm;
 
@@ -67,6 +93,13 @@ void setup()
     strcpy(MQTT_USER, custom_mqtt_user.getValue());
     strcpy(MQTT_PASS, custom_mqtt_password.getValue());
 
+    // Persistently store the MQTT credentials to Preferences.
+    preferences.putString("mqtt_host", String(MQTT_HOST));
+    preferences.putString("mqtt_port", String(MQTT_PORT));
+    preferences.putString("mqtt_user", String(MQTT_USER));
+    preferences.putString("mqtt_pass", String(MQTT_PASS));
+    preferences.end();
+
 #ifdef DEBUG
     Serial.println("Wi-Fi connected via WiFiManager.");
     Serial.print("IP address: ");
@@ -79,7 +112,7 @@ void setup()
 #endif
 
     // -------------------------------------------------
-    // 2) Proceed with rest of setup logic
+    //    Proceed with rest of setup logic
     // -------------------------------------------------
     setupDataReadout(); // Prepare data readout structures
     setupOTA();         // Initialize Over-the-Air updates
